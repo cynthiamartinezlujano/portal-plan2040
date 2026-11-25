@@ -362,7 +362,7 @@ function vistaCom(){
 
     <div class="tiles">
       <div class="tile"><img src="${IMG.family}" alt=""><div><b>${fmt(d.fam_vis)} de ${fmt(d.fam)}</b><span>familias visitadas completas</span></div></div>
-      <div class="tile"><img src="${IMG.heart}" alt=""><div><b>${fmt(d.emb_vis)} de ${fmt(d.emb)}</b><span>embarazadas visitadas</span></div></div>
+      <div class="tile"><img src="${IMG.heart}" alt=""><div><b>${fmt(d.emb_vis)} de ${fmt(d.emb)}</b><span>mamás visitadas${d.post? ` · ${fmt(d.emb-d.post)} embarazadas y ${fmt(d.post)} en posparto`:""}</span></div></div>
       <div class="tile"><img src="${IMG.house}" alt=""><div><b>${fmt(d.bim)}</b><span>niños bimestrales descansan este mes</span></div></div>
     </div>
 
@@ -390,7 +390,7 @@ function vistaCom(){
         <span class="estado" style="--c:${g.est.c};--cb:${g.est.cb}">${g.est.e} ${g.est.t}</span>
         <div class="mini-datos">
           <span><img src="${IMG.family}" alt="">${g.fam_vis}/${g.fam} familias</span>
-          ${g.emb? `<span><img src="${IMG.heart}" alt="">${g.emb_vis}/${g.emb} embarazadas</span>`:""}
+          ${g.emb? `<span><img src="${IMG.heart}" alt="">${g.emb_vis}/${g.emb} mamás</span>`:""}
         </div>
         ${dp!==null? `<div class="delta">${dp>=0?"↑":"↓"} ${Math.abs(dp)} pts vs ${mesPrev}</div>`:""}
       </button>`}).join("")}</div>
@@ -481,24 +481,25 @@ function vistaGuia(){
       </section>
 
       <section class="pcard">
-        <h4><img src="${IMG.heart}" alt="">Embarazadas</h4>
+        <h4><img src="${IMG.heart}" alt="">Mamás: embarazadas y posparto</h4>
         ${g.emb? `<div class="resumen-g" style="margin-top:12px">
             ${anillo(pe, 140, 16, colorEmb, "visitadas")}
             <div class="txt renglones">
-              ${renglon("corazon", `<b>${g.emb_vis} de ${g.emb}</b> embarazadas visitadas este mes.`)}
+              ${renglon("corazon", `<b>${g.emb_vis} de ${g.emb}</b> mamás visitadas este mes.`)}
               ${g.emb_pend.length
                 ? renglon("estrella", `Le ${g.emb_pend.length===1?"falta <b>1</b>":"faltan <b>"+g.emb_pend.length+"</b>"} por visitar: vale la pena darles prioridad.`)
                 : renglon("check", "¡Todas ya fueron visitadas este mes! 💛")}
             </div>
           </div>
-          <div class="gtit">${icono("corazon")}Sus embarazadas</div>
+          <div class="gtit">${icono("corazon")}Sus mamás</div>
           <div class="numeritos">
-            <div><b>${g.emb}</b><span>embarazadas</span></div>
+            <div><b>${g.emb-(g.post||0)}</b><span>embarazadas</span></div>
+            <div><b>${g.post||0}</b><span>en posparto</span></div>
             <div><b>${g.emb_prox}</b><span>con 36+ semanas</span></div>
             <div><b>${g.emb_sinficha}</b><span>sin ficha prenatal</span></div>
           </div>
-          ${g.emb_pend.length? `<button class="ver-lista ${st.lista==="emb"?"on":""}" onclick="verLista('emb')">${st.lista==="emb"?"Ocultar lista":"Ver "+(g.emb_pend.length===1?"la embarazada":"las "+g.emb_pend.length+" embarazadas")+" por visitar →"}</button>`:""}`
-        : `<div class="vacio"><img src="${IMG.fam}" alt="">No tiene embarazadas a su cargo este mes.</div>`}
+          ${g.emb_pend.length? `<button class="ver-lista ${st.lista==="emb"?"on":""}" onclick="verLista('emb')">${st.lista==="emb"?"Ocultar lista":"Ver "+(g.emb_pend.length===1?"la mamá":"las "+g.emb_pend.length+" mamás")+" por visitar →"}</button>`:""}`
+        : `<div class="vacio"><img src="${IMG.fam}" alt="">No tiene embarazadas ni mamás en posparto a su cargo este mes.</div>`}
       </section>
     </div>
 
@@ -506,13 +507,15 @@ function vistaGuia(){
       <div class="lista-cab">
         <h4>${st.lista==="ninos"
           ? `<img src="${IMG.family}" alt="">Niños por visitar · ${g.pend.length}`
-          : `<img src="${IMG.heart}" alt="">Embarazadas por visitar · ${g.emb_pend.length}`}</h4>
+          : `<img src="${IMG.heart}" alt="">Mamás por visitar · ${g.emb_pend.length}`}</h4>
         <button class="exportar" onclick="exportar('${st.lista}')">⬇️ Descargar en Excel</button>
       </div>
       ${st.lista==="ninos"? `<div class="sub">Ordenados por el tiempo desde su última visita: los de arriba esperan desde hace más.</div>
         <input class="buscar" placeholder="Buscar niño, familia o localidad…" value="${esc(st.q)}" oninput="st.q=this.value;pintarLista()">
         <div id="lista">${listaNinos(g)}</div>`
-      : g.emb_pend.map(x=>`<div class="emb">🤰<div style="flex:1"><b>${esc(x.n)}</b><small>${x.sdg? x.sdg+" semanas":""}${x.fpp? " · fecha probable "+esc(x.fpp):""}${x.ficha?"":" · sin ficha prenatal"}</small></div><span class="tag ${x.s==="No localizada"?"noloc":"lejos"}">${x.s==="No localizada"?"Se intentó, no se encontró":"Sin visita"}</span></div>`).join("")}
+      : g.emb_pend.map(x=>`<div class="emb">${x.post?"👶":"🤰"}<div style="flex:1"><b>${esc(x.n)}</b><small>${x.post
+          ? "En posparto"+(x.fpp? " · fecha probable de parto "+esc(x.fpp):"")
+          : (x.sdg? x.sdg+" semanas":"Embarazada")+(x.fpp? " · fecha probable "+esc(x.fpp):"")+(x.ficha?"":" · sin ficha prenatal")}</small></div><span class="tag ${x.s==="No localizada"?"noloc":"lejos"}">${x.s==="No localizada"?"Se intentó, no se encontró":"Sin visita"}</span></div>`).join("")}
     </section>`:""}
 
     ${g.semanas.length? `<section class="pcard"><h4><img src="${IMG.clock}" alt="">Su ritmo por semana</h4>
@@ -651,10 +654,10 @@ function exportar(cual){
     descargar(`Niños por visitar - ${g.nombre} - ${mes.label}.xlsx`,
       xlsx("Niños por visitar", [CAB_NINOS, ...filasNinos(g, d, mes)], ANCHO_NINOS));
   } else {
-    descargar(`Embarazadas por visitar - ${g.nombre} - ${mes.label}.xlsx`, xlsx("Embarazadas por visitar", [
-      ["Comunidad","Guía","Mes","Embarazada","Semanas de gestación","Fecha probable de parto","Ficha prenatal","Estado"],
-      ...g.emb_pend.map(x=>[d.nombre, g.nombre, mes.label, x.n, x.sdg||"", fechaLarga(x.fpp), x.ficha?"Sí":"No", x.s])],
-      [16,26,16,34,12,22,14,22]));
+    descargar(`Mamás por visitar - ${g.nombre} - ${mes.label}.xlsx`, xlsx("Mamás por visitar", [
+      ["Comunidad","Guía","Mes","Mamá","Etapa","Semanas de gestación","Fecha probable de parto","Ficha prenatal","Estado"],
+      ...g.emb_pend.map(x=>[d.nombre, g.nombre, mes.label, x.n, x.post?"Posparto":"Embarazada", x.sdg||"", fechaLarga(x.fpp), x.post?"":(x.ficha?"Sí":"No"), x.s])],
+      [16,26,16,34,14,12,22,14,22]));
   }
 }
 function exportarEquipo(){
@@ -674,8 +677,8 @@ function textoWA(){
     ? `¡Ya llevas ${g.visitados} de ${g.base} niños visitados en ${MES_N[mes.num]} (${Math.round(p)}%)! Cumpliste la meta, ¡gracias por tu entrega! 🎉`
     : `¡Llevas ${g.visitados} de ${g.base} niños visitados en ${MES_N[mes.num]} (${Math.round(p)}%)! Gracias por tu esfuerzo 🙌`);
   if(g.emb_pend.length){
-    L.push("", "🤰 *Embarazadas por visitar:*");
-    g.emb_pend.forEach(x=>L.push(`• ${x.n}${x.sdg? " ("+x.sdg+" semanas)":""}`));
+    L.push("", "🤰 *Mamás por visitar:*");
+    g.emb_pend.forEach(x=>L.push(`• ${x.n}${x.post? " (posparto)" : (x.sdg? " ("+x.sdg+" semanas)":"")}`));
   }
   if(g.pend.length){
     L.push("", "👧👦 *Niños por visitar:*");
