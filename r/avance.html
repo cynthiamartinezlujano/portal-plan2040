@@ -398,6 +398,13 @@ function vistaCom(){
   </div>`;
 }
 
+/* posparto: hasta 90 días después del parto; el embarazo puede seguir abierto en el CRM o
+   estar ya cerrado. La fecha sale del bebé ligado, de la fecha probable o del día del cierre. */
+const ORIGEN_PARTO = {bebe:"nació su bebé", fpp:"según su fecha probable de parto", cierre:"según el día en que se cerró el embarazo"};
+function textoPosparto(x){
+  const cuando = x.dias==null ? "" : (x.dias<=0 ? " · en estos días" : " · hace "+x.dias+(x.dias===1?" día":" días"))+(ORIGEN_PARTO[x.src]? " ("+ORIGEN_PARTO[x.src]+")":"");
+  return (x.cer ? "Posparto · embarazo concluido" : "Posparto · falta cerrar el embarazo en el CRM") + cuando;
+}
 function tagDias(p){
   if(p.s==="No localizado") return `<span class="tag noloc">Se intentó, no se encontró</span>`;
   if(p.d===null) return `<span class="tag lejos">Aún sin visitas</span>`;
@@ -513,8 +520,8 @@ function vistaGuia(){
       ${st.lista==="ninos"? `<div class="sub">Ordenados por el tiempo desde su última visita: los de arriba esperan desde hace más.</div>
         <input class="buscar" placeholder="Buscar niño, familia o localidad…" value="${esc(st.q)}" oninput="st.q=this.value;pintarLista()">
         <div id="lista">${listaNinos(g)}</div>`
-      : g.emb_pend.map(x=>`<div class="emb">${x.post?"👶":"🤰"}<div style="flex:1"><b>${esc(x.n)}</b><small>${x.post
-          ? "En posparto"+(x.fpp? " · fecha probable de parto "+esc(x.fpp):"")
+      : g.emb_pend.map(x=>`<div class="emb">${x.post?(x.src==="bebe"?"👶":"💛"):"🤰"}<div style="flex:1"><b>${esc(x.n)}</b><small>${x.post
+          ? textoPosparto(x)
           : (x.sdg? x.sdg+" semanas":"Embarazada")+(x.fpp? " · fecha probable "+esc(x.fpp):"")+(x.ficha?"":" · sin ficha prenatal")}</small></div><span class="tag ${x.s==="No localizada"?"noloc":"lejos"}">${x.s==="No localizada"?"Se intentó, no se encontró":"Sin visita"}</span></div>`).join("")}
     </section>`:""}
 
@@ -655,9 +662,9 @@ function exportar(cual){
       xlsx("Niños por visitar", [CAB_NINOS, ...filasNinos(g, d, mes)], ANCHO_NINOS));
   } else {
     descargar(`Mamás por visitar - ${g.nombre} - ${mes.label}.xlsx`, xlsx("Mamás por visitar", [
-      ["Comunidad","Guía","Mes","Mamá","Etapa","Semanas de gestación","Fecha probable de parto","Ficha prenatal","Estado"],
-      ...g.emb_pend.map(x=>[d.nombre, g.nombre, mes.label, x.n, x.post?"Posparto":"Embarazada", x.sdg||"", fechaLarga(x.fpp), x.post?"":(x.ficha?"Sí":"No"), x.s])],
-      [16,26,16,34,14,12,22,14,22]));
+      ["Comunidad","Guía","Mes","Mamá","Etapa","Embarazo en el CRM","Días desde el parto (aprox.)","Semanas de gestación","Fecha probable de parto","Ficha prenatal","Estado"],
+      ...g.emb_pend.map(x=>[d.nombre, g.nombre, mes.label, x.n, x.post?"Posparto":"Embarazada", x.cer?"Cerrado":"Abierto", x.post&&x.dias!=null?x.dias:"", x.sdg||"", fechaLarga(x.fpp), x.post?"":(x.ficha?"Sí":"No"), x.s])],
+      [16,26,16,34,14,16,14,12,22,14,22]));
   }
 }
 function exportarEquipo(){
